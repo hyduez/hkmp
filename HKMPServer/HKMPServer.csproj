@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
     <Import Project="LocalBuildProperties_example.props" Condition="!Exists('LocalBuildProperties.props')" />
     <Import Project="LocalBuildProperties.props" Condition="Exists('LocalBuildProperties.props')" />
 
@@ -15,8 +15,9 @@
             <Project>{f34118b2-515d-4c33-88e6-9cfef2ad5a15}</Project>
             <Name>HKMP</Name>
         </ProjectReference>
-        <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=null">
-            <HintPath>$(References)\Newtonsoft.Json.dll</HintPath>
-        </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     </ItemGroup>
 </Project>

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
     <Import Project="LocalBuildProperties_example.props" Condition="!Exists('LocalBuildProperties.props')" />
     <Import Project="LocalBuildProperties.props" Condition="Exists('LocalBuildProperties.props')" />
 
@@ -28,76 +28,25 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="Mono.Cecil" Version="0.11.6" />
+        <PackageReference Include="MonoMod.RuntimeDetour" Version="25.3.1" />
+        <PackageReference Include="MonoMod.Utils" Version="25.0.9" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+        <PackageReference Include="UnityEngine.Modules" Version="2021.3.33" />
         <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-            <HintPath>$(References)\Assembly-CSharp.dll</HintPath>
+            <HintPath>lib\Assembly-CSharp.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="MMHOOK_Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-            <HintPath>$(References)\MMHOOK_Assembly-CSharp.dll</HintPath>
+            <HintPath>lib\MMHOOK_Assembly-CSharp.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="MMHOOK_PlayMaker">
-            <HintPath>$(References)\MMHOOK_PlayMaker.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="MonoMod.RuntimeDetour">
-            <HintPath>$(References)\MonoMod.RuntimeDetour.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="MonoMod.Utils">
-            <HintPath>$(References)\MonoMod.Utils.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="Mono.Cecil">
-            <HintPath>$(References)\Mono.Cecil.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=null">
-            <HintPath>$(References)\Newtonsoft.Json.dll</HintPath>
+            <HintPath>lib\MMHOOK_PlayMaker.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="PlayMaker, Version=1.6.0.0, Culture=neutral, PublicKeyToken=null">
-            <HintPath>$(References)\PlayMaker.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-            <HintPath>$(References)\UnityEngine.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="UnityEngine.AudioModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-            <HintPath>$(References)\UnityEngine.AudioModule.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-            <HintPath>$(References)\UnityEngine.CoreModule.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="UnityEngine.ImageConversionModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-            <HintPath>$(References)\UnityEngine.ImageConversionModule.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="UnityEngine.InputLegacyModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-            <HintPath>$(References)\UnityEngine.InputLegacyModule.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="UnityEngine.ParticleSystemModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-            <HintPath>$(References)\UnityEngine.ParticleSystemModule.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="UnityEngine.Physics2DModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-            <HintPath>$(References)\UnityEngine.Physics2DModule.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="UnityEngine.TextRenderingModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-            <HintPath>$(References)\UnityEngine.TextRenderingModule.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
-            <HintPath>$(References)\UnityEngine.UI.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="UnityEngine.UIModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-            <HintPath>$(References)\UnityEngine.UIModule.dll</HintPath>
+            <HintPath>lib\PlayMaker.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <PackageReference Include="BouncyCastle.Cryptography" Version="2.5.1" />
