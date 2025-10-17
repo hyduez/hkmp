@@ -115,6 +115,26 @@ internal class Entity {
     /// Used to check whether state/variables change and to update the server accordingly.
     /// </summary>
     private readonly List<FsmSnapshot> _fsmSnapshots;
+    
+    /// <summary>
+    /// Counter for throttling updates. Incremented each frame to stagger entity updates.
+    /// </summary>
+    private int _updateCounter;
+    
+    /// <summary>
+    /// The update group this entity belongs to for staggered updates.
+    /// </summary>
+    private readonly int _updateGroup;
+    
+    /// <summary>
+    /// Static counter for assigning update groups to entities.
+    /// </summary>
+    private static int _nextUpdateGroup;
+    
+    /// <summary>
+    /// Number of update groups to spread entities across. Higher value = less frequent updates per entity.
+    /// </summary>
+    private const int UpdateGroupCount = 8;
 
     public Entity(
         NetClient netClient,
@@ -167,6 +187,11 @@ internal class Entity {
 
         // Add a position interpolation component to the enemy so we can smooth out position updates
         Object.Client.AddComponent<PositionInterpolation>();
+        
+        // Assign this entity to an update group for staggered updates
+        _updateGroup = _nextUpdateGroup % UpdateGroupCount;
+        _nextUpdateGroup++;
+        _updateCounter = 0;
 
         // Register an update event to send position updates and check for certain value changes
         MonoBehaviourUtil.Instance.OnUpdateEvent += OnUpdate;
@@ -590,6 +615,11 @@ internal class Entity {
     /// </summary>
     [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
     private void OnUpdate() {
+        // Increment update counter and only process full updates for entities in the current update group
+        // This staggers updates across frames to reduce per-frame processing with many entities
+        _updateCounter++;
+        bool shouldDoFullUpdate = (_updateCounter % UpdateGroupCount) == _updateGroup;
+        
         if (Object.Host == null) {
             if (_lastIsActive) {
                 // If the host object was active, but now it null (or destroyed in Unity), we can send
@@ -627,7 +657,17 @@ internal class Entity {
 
             return;
         }
-
+        
+        // Always check critical updates like position and active state
+        CheckCriticalUpdates(shouldDoFullUpdate);
+    }
+    
+    /// <summary>
+    /// Check for critical entity updates like position, scale, active state, and FSM data.
+    /// </summary>
+    /// <param name="doFullUpdate">Whether to perform a full update including FSM variable checks.</param>
+    [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
+    private void CheckCriticalUpdates(bool doFullUpdate) {
         var transform = Object.Host.transform;
 
         var newPosition = _hasParent ? transform.localPosition : transform.position;
@@ -690,6 +730,11 @@ internal class Entity {
                 Id,
                 newActive
             );
+        }
+
+        // Only check FSM state and variables on full updates to reduce CPU load
+        if (!doFullUpdate) {
+            return;
         }
 
         for (byte fsmIndex = 0; fsmIndex < _fsms.Host.Count; fsmIndex++) {

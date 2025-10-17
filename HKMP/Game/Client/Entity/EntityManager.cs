@@ -29,6 +29,11 @@ internal class EntityManager {
     /// Dictionary mapping entity IDs to their respective entity instances.
     /// </summary>
     private readonly Dictionary<ushort, Entity> _entities;
+    
+    /// <summary>
+    /// Dictionary mapping entity host object names to entity instances for fast lookup.
+    /// </summary>
+    private readonly Dictionary<string, Entity> _entitiesByName;
 
     /// <summary>
     /// Whether the scene host is determined for this scene locally.
@@ -50,6 +55,7 @@ internal class EntityManager {
     public EntityManager(NetClient netClient) {
         _netClient = netClient;
         _entities = new Dictionary<ushort, Entity>();
+        _entitiesByName = new Dictionary<string, Entity>();
         _receivedUpdates = new Queue<BaseEntityUpdate>();
     }
 
@@ -57,7 +63,7 @@ internal class EntityManager {
     /// Initialize the entity manager by initializing the processor and action hooks.
     /// </summary>
     public void Initialize() {
-        EntityProcessor.Initialize(_entities, _netClient);
+        EntityProcessor.Initialize(_entities, _entitiesByName, _netClient);
     }
 
     /// <summary>
@@ -324,9 +330,14 @@ internal class EntityManager {
 
     /// <summary>
     /// Check to see if there are received un-applied entity updates.
+    /// Limits processing to avoid frame spikes with many queued updates.
     /// </summary>
     private void CheckReceivedUpdates() {
-        while (_receivedUpdates.Count != 0) {
+        // Process up to 50 queued updates per call to avoid frame spikes
+        const int maxUpdatesPerCall = 50;
+        int processedCount = 0;
+        
+        while (_receivedUpdates.Count != 0 && processedCount < maxUpdatesPerCall) {
             var update = _receivedUpdates.Peek();
             
             if (_entities.TryGetValue(update.Id, out _)) {
@@ -338,12 +349,18 @@ internal class EntityManager {
                 } else if (update is ReliableEntityUpdate reliableEntityUpdate) {
                     handled = HandleReliableEntityUpdate(reliableEntityUpdate);
                 } else {
+                    _receivedUpdates.Dequeue();
+                    processedCount++;
                     continue;
                 }
 
                 if (handled) {
                     _receivedUpdates.Dequeue();
+                    processedCount++;
                 }
+            } else {
+                // Entity not found yet, will try again later
+                break;
             }
         }
     }
@@ -382,6 +399,7 @@ internal class EntityManager {
 
         // Clear the list of entities and the queue of received updates that have not been applied yet
         _entities.Clear();
+        _entitiesByName.Clear();
         _receivedUpdates.Clear();
         
         MusicComponent.ClearInstance();
@@ -490,8 +508,13 @@ internal class EntityManager {
             .Concat(Object.FindObjectsOfType<DreamPlatform>(true).Select(dreamPlatform => dreamPlatform.gameObject))
             // Filter out GameObjects not in the current scene
             .Where(obj => obj.scene == scene)
-            .Distinct();
+            .Distinct()
+            .ToList(); // Materialize the query to avoid re-evaluation
 
+        var totalObjects = objectsToCheck.Count;
+        Logger.Info($"Found {totalObjects} potential entity objects to process in scene {scene.name}");
+
+        var processedCount = 0;
         foreach (var obj in objectsToCheck) {
             new EntityProcessor {
                 GameObject = obj,
@@ -499,7 +522,15 @@ internal class EntityManager {
                 IsSceneHostDetermined = IsSceneHostDetermined,
                 LateLoad = lateLoad
             }.Process();
+            
+            processedCount++;
+            // Log progress every 50 entities to help monitor performance with many entities
+            if (processedCount % 50 == 0) {
+                Logger.Info($"Entity processing progress: {processedCount}/{totalObjects}");
+            }
         }
+        
+        Logger.Info($"Finished processing {processedCount} objects, registered {_entities.Count} entities in total");
     }
 
     /// <summary>
@@ -529,10 +560,10 @@ internal class EntityManager {
             return;
         }
 
-        // Check if the name we are looking for is one of our registered entity's host objects
-        foreach (var entity in _entities.Values) {
+        // Use cached lookup by name for faster performance with many entities
+        if (_entitiesByName.TryGetValue(self.objectName.Value, out var entity)) {
             var obj = entity.Object.Host;
-            if (obj != null && obj.name == self.objectName.Value) {
+            if (obj != null) {
                 // The host object of the entity matches the name the action was looking for, so we set the variable
                 self.store.Value = obj;
                 
