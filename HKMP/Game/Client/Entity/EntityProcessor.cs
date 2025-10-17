@@ -20,6 +20,10 @@ internal class EntityProcessor {
     /// </summary>
     private static Dictionary<ushort, Entity> _entities;
     /// <summary>
+    /// Reference to the dictionary of entities by name from the entity manager.
+    /// </summary>
+    private static Dictionary<string, Entity> _entitiesByName;
+    /// <summary>
     /// The net client used to pass onto constructed entities.
     /// </summary>
     private static NetClient _netClient;
@@ -67,6 +71,22 @@ internal class EntityProcessor {
     /// <param name="netClient">The net client instance to pass onto constructed entities.</param>
     public static void Initialize(Dictionary<ushort, Entity> entities, NetClient netClient) {
         _entities = entities;
+        _netClient = netClient;
+
+        UnityEngine.SceneManagement.SceneManager.activeSceneChanged += (_, _) => {
+            _lastId = 0;
+        };
+    }
+    
+    /// <summary>
+    /// Initialize the entity processor with references to both entity dictionaries and the net client.
+    /// </summary>
+    /// <param name="entities">A reference to the dictionary of entities from the entity manager.</param>
+    /// <param name="entitiesByName">A reference to the dictionary of entities by name from the entity manager.</param>
+    /// <param name="netClient">The net client instance to pass onto constructed entities.</param>
+    public static void Initialize(Dictionary<ushort, Entity> entities, Dictionary<string, Entity> entitiesByName, NetClient netClient) {
+        _entities = entities;
+        _entitiesByName = entitiesByName;
         _netClient = netClient;
 
         UnityEngine.SceneManagement.SceneManager.activeSceneChanged += (_, _) => {
@@ -182,6 +202,11 @@ internal class EntityProcessor {
         }
 
         _entities[id] = entity;
+        
+        // Cache entity by name for fast lookup
+        if (_entitiesByName != null && gameObject.name != null) {
+            _entitiesByName[gameObject.name] = entity;
+        }
 
         Entities.Add(entity);
 
