@@ -435,7 +435,7 @@ internal class PlayerManager {
         playerContainer.SetActive(true);
         playerContainer.SetActiveChildren(true);
 
-        AddNameToPlayer(playerContainer, name, team);
+        AddNameToPlayer(playerContainer, name, team, playerData.Id);
 
         // Let the SkinManager update the skin
         _skinManager.UpdatePlayerSkin(playerObject, skinId);
@@ -496,7 +496,8 @@ internal class PlayerManager {
     /// <param name="playerContainer">The GameObject for the player container.</param>
     /// <param name="name">The username that the object should have.</param>
     /// <param name="team">The team that the player is on.</param>
-    public void AddNameToPlayer(GameObject playerContainer, string name, Team team = Team.None) {
+    /// <param name="playerId">The ID of the player for color generation.</param>
+    public void AddNameToPlayer(GameObject playerContainer, string name, Team team = Team.None, ushort playerId = 0) {
         // Create a name object to set the username to, slightly above the player object
         var nameObject = playerContainer.FindGameObjectInChildren(UsernameObjectName);
 
@@ -508,7 +509,7 @@ internal class PlayerManager {
 
         if (textMeshObject) {
             textMeshObject.text = name.ToUpper();
-            ChangeNameColor(textMeshObject, team);
+            ChangeNameColor(textMeshObject, playerId);
         }
 
         nameObject.SetActive(_serverSettings.DisplayNames);
@@ -563,11 +564,11 @@ internal class PlayerManager {
             return;
         }
 
-        // Get the name object and update the color based on the new team
+        // Get the name object and update the color based on the player ID
         var nameObject = playerData.PlayerContainer.FindGameObjectInChildren(UsernameObjectName);
         var textMeshObject = nameObject.GetComponent<TextMeshPro>();
 
-        ChangeNameColor(textMeshObject, team);
+        ChangeNameColor(textMeshObject, id);
 
         // Toggle body damage on if:
         // PvP is enabled and body damage is enabled AND
@@ -590,8 +591,13 @@ internal class PlayerManager {
 
         var nameObject = HeroController.instance.gameObject.FindGameObjectInChildren(UsernameObjectName);
 
-        var textMeshObject = nameObject.GetComponent<TextMeshPro>();
-        ChangeNameColor(textMeshObject, team);
+        if (nameObject != null) {
+            var textMeshObject = nameObject.GetComponent<TextMeshPro>();
+            if (textMeshObject != null) {
+                // Keep local player name white for distinction
+                textMeshObject.color = Color.white;
+            }
+        }
 
         foreach (var playerData in _playerData.Values) {
             if (!playerData.IsInLocalScene) {
@@ -670,28 +676,12 @@ internal class PlayerManager {
     }
 
     /// <summary>
-    /// Change the color of a TextMeshPro object according to the team.
+    /// Change the color of a TextMeshPro object according to the player ID.
     /// </summary>
     /// <param name="textMeshObject">The TextMeshPro object representing the name.</param>
-    /// <param name="team">The team that the name should be colored after.</param>
-    private void ChangeNameColor(TextMeshPro textMeshObject, Team team) {
-        switch (team) {
-            case Team.Moss:
-                textMeshObject.color = new Color(0f / 255f, 150f / 255f, 0f / 255f);
-                break;
-            case Team.Hive:
-                textMeshObject.color = new Color(200f / 255f, 150f / 255f, 0f / 255f);
-                break;
-            case Team.Grimm:
-                textMeshObject.color = new Color(250f / 255f, 50f / 255f, 50f / 255f);
-                break;
-            case Team.Lifeblood:
-                textMeshObject.color = new Color(50f / 255f, 150f / 255f, 200f / 255f);
-                break;
-            default:
-                textMeshObject.color = Color.white;
-                break;
-        }
+    /// <param name="playerId">The player ID used to generate a unique color.</param>
+    private void ChangeNameColor(TextMeshPro textMeshObject, ushort playerId) {
+        textMeshObject.color = PlayerColorUtil.GetPlayerColor(playerId);
     }
 
     /// <summary>
