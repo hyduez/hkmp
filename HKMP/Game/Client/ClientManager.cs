@@ -47,6 +47,11 @@ internal class ClientManager : IClientManager {
     private readonly UiManager _uiManager;
 
     /// <summary>
+    /// The player indicator manager instance.
+    /// </summary>
+    private readonly PlayerIndicatorManager _playerIndicatorManager;
+
+    /// <summary>
     /// The current server settings.
     /// </summary>
     private readonly ServerSettings _serverSettings;
@@ -223,6 +228,7 @@ internal class ClientManager : IClientManager {
         _playerData = new Dictionary<ushort, ClientPlayerData>();
 
         _playerManager = new PlayerManager(serverSettings, _playerData);
+        _playerIndicatorManager = new PlayerIndicatorManager(_playerData);
         _animationManager = new AnimationManager(netClient, _playerManager);
         _mapManager = new MapManager(netClient, serverSettings);
 
@@ -255,6 +261,12 @@ internal class ClientManager : IClientManager {
         _entityManager.Initialize();
         
         _saveManager.Initialize();
+        
+        _playerIndicatorManager.Initialize();
+        
+        // Add the updater component to the UI game object
+        var updater = UiManager.UiGameObject.AddComponent<PlayerIndicatorUpdater>();
+        updater.SetIndicatorManager(_playerIndicatorManager);
         
         CustomHooks.Initialize();
         
