@@ -20,8 +20,9 @@ namespace Hkmp.Networking.Server;
 internal class NetServer : INetServer {
     /// <summary>
     /// The time to throttle a client after they were rejected connection in milliseconds.
+    /// Reduced from 2500ms to 1500ms for faster reconnection attempts.
     /// </summary>
-    private const int ThrottleTime = 2500;
+    private const int ThrottleTime = 1500;
 
     /// <summary>
     /// The packet manager instance.

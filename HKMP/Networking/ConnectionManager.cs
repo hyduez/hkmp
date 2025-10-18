@@ -23,8 +23,9 @@ internal abstract class ConnectionManager {
 
     /// <summary>
     /// The number of milliseconds a connection attempt can maximally take before being timed out.
+    /// Reduced from 60000ms to 15000ms for faster failure detection.
     /// </summary>
-    public const int TimeoutMillis = 60000;
+    public const int TimeoutMillis = 15000;
     
     /// <summary>
     /// The packet manager instance to register handlers for slice and slice ack data.

@@ -27,8 +27,10 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     where TPacketId : Enum {
     /// <summary>
     /// The time in milliseconds to disconnect after not receiving any updates.
+    /// Increased from 5000ms to 10000ms to handle high-latency connections better.
+    /// Will be dynamically adjusted based on RTT.
     /// </summary>
-    private const int ConnectionTimeout = 5000;
+    private const int ConnectionTimeout = 10000;
 
     /// <summary>
     /// The MTU (maximum transfer unit) to use to send packets with. If the length of a packet exceeds this, we break
@@ -96,6 +98,11 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
     private bool _isUpdating;
     
     /// <summary>
+    /// Adaptive timeout multiplier based on connection quality.
+    /// </summary>
+    private double _timeoutMultiplier = 1.0;
+    
+    /// <summary>
     /// The Socket instance to use to send packets.
     /// </summary>
     public DtlsTransport DtlsTransport { get; set; }
@@ -134,7 +141,7 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
 
         _heartBeatTimer = new Timer {
             AutoReset = false,
-            Interval = ConnectionTimeout
+            Interval = GetAdaptiveTimeout()
         };
         _heartBeatTimer.Elapsed += OnHeartBeatTimerElapsed;
     }
@@ -193,8 +200,12 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
             _remoteSequence = sequence;
         }
 
+        // Adjust timeout based on RTT for adaptive behavior
+        UpdateAdaptiveTimeout();
+
         // Reset the heart beat timer, as we have received a packet and the connection is alive
         _heartBeatTimer.Stop();
+        _heartBeatTimer.Interval = GetAdaptiveTimeout();
         _heartBeatTimer.Start();
     }
 
@@ -398,6 +409,35 @@ internal abstract class UdpUpdateManager<TOutgoing, TPacketId> : UdpUpdateManage
             } else {
                 existingDataCollection.DataInstances.Add(packetData);
             }
+        }
+    }
+    
+    /// <summary>
+    /// Get the adaptive timeout value based on RTT and connection quality.
+    /// </summary>
+    /// <returns>The adaptive timeout in milliseconds.</returns>
+    private double GetAdaptiveTimeout() {
+        var baseTimeout = ConnectionTimeout * _timeoutMultiplier;
+        var rttBasedTimeout = AverageRtt * 4.0;
+        return System.Math.Max(baseTimeout, System.Math.Max(rttBasedTimeout, 3000));
+    }
+    
+    /// <summary>
+    /// Update the adaptive timeout multiplier based on current RTT.
+    /// </summary>
+    private void UpdateAdaptiveTimeout() {
+        var avgRtt = AverageRtt;
+        
+        if (avgRtt < 50) {
+            _timeoutMultiplier = 0.5;
+        } else if (avgRtt < 100) {
+            _timeoutMultiplier = 0.75;
+        } else if (avgRtt < 200) {
+            _timeoutMultiplier = 1.0;
+        } else if (avgRtt < 400) {
+            _timeoutMultiplier = 1.5;
+        } else {
+            _timeoutMultiplier = 2.0;
         }
     }
 }

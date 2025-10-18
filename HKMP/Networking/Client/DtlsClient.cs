@@ -20,8 +20,9 @@ internal class DtlsClient {
 
     /// <summary>
     /// The maximum time the DTLS handshake can take in milliseconds before timing out.
+    /// Increased from 5000ms to 8000ms to support high-latency connections.
     /// </summary>
-    public const int DtlsHandshakeTimeoutMillis = 5000;
+    public const int DtlsHandshakeTimeoutMillis = 8000;
 
     /// <summary>
     /// The socket instance for the underlying networking.
@@ -181,7 +182,7 @@ internal class DtlsClient {
     private void DtlsReceiveLoop(CancellationToken cancellationToken) {
         while (!cancellationToken.IsCancellationRequested && DtlsTransport != null) {
             var buffer = new byte[MaxPacketSize];
-            var length = DtlsTransport.Receive(buffer, 0, buffer.Length, 5);
+            var length = DtlsTransport.Receive(buffer, 0, buffer.Length, 1);
             if (length >= 0) {
                 DataReceivedEvent?.Invoke(buffer, length);
             }

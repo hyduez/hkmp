@@ -113,7 +113,7 @@ internal sealed class ConnectionPool<TConnection> : IDisposable where TConnectio
     public async Task<TConnection> AcquireAsync(TimeSpan? timeout = null) {
         if (_disposed) throw new ObjectDisposedException(nameof(ConnectionPool<TConnection>));
 
-        var timeoutValue = timeout ?? TimeSpan.FromSeconds(30);
+        var timeoutValue = timeout ?? TimeSpan.FromSeconds(10);
         if (!await _connectionSemaphore.WaitAsync(timeoutValue)) {
             throw new TimeoutException("Failed to acquire connection from pool");
         }
@@ -138,7 +138,7 @@ internal sealed class ConnectionPool<TConnection> : IDisposable where TConnectio
             }
 
             if (_currentSize >= _maxSize) {
-                await Task.Delay(100);
+                await Task.Delay(50);
             }
         }
     }

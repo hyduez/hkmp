@@ -14,12 +14,14 @@ namespace Hkmp.Networking.Chunk;
 internal abstract class ChunkSender {
     /// <summary>
     /// The number of milliseconds to wait between sending slices.
+    /// Reduced from 20ms to 10ms for faster chunk transmission.
     /// </summary>
-    private const int WaitMillisBetweenSlices = 20;
+    private const int WaitMillisBetweenSlices = 10;
     /// <summary>
     /// The number of milliseconds to wait before re-sending a slice.
+    /// Reduced from 100ms to 50ms for faster retry on packet loss.
     /// </summary>
-    private const int WaitMillisResendSlice = 100;
+    private const int WaitMillisResendSlice = 50;
     
     /// <summary>
     /// Blocking collection of packets that need to be sent as chunks.

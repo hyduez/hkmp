@@ -24,8 +24,8 @@ internal sealed class OptimizedNetworkManager : IDisposable {
     private volatile bool _disposed;
 
     private const int MaxQueueSize = 10000;
-    private const int SendBatchSize = 50;
-    private const int SendIntervalMs = 10;
+    private const int SendBatchSize = 100;
+    private const int SendIntervalMs = 5;
 
     public OptimizedNetworkManager() {
         _sendQueue = new ConcurrentQueue<NetworkMessage>();
@@ -124,7 +124,7 @@ internal sealed class OptimizedNetworkManager : IDisposable {
             try {
                 using ("Network.Receive".MeasurePerformance()) {
                     // Placeholder for actual receive implementation
-                    await Task.Delay(10, token);
+                    await Task.Delay(5, token);
                 }
             } catch (OperationCanceledException) {
                 break;
